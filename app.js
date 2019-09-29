@@ -5,6 +5,9 @@ var mongoose = require('mongoose');
 
 mongoose.connect('mongodb+srv://n3m0:admin1234@cluster0-21ezb.mongodb.net/YelpCamp?retryWrites=true&w=majority');
 
+app.use(bodyParser.urlencoded({extended: true}));
+app.set('view engine', 'ejs');
+
 // SCHEMA SETUP
 var campgroundSchema  = new mongoose.Schema({
     name: String,
@@ -13,37 +16,32 @@ var campgroundSchema  = new mongoose.Schema({
 
 var Campground = mongoose.model('Campground', campgroundSchema);
 
-// ADD CAMPGROUND
-Campground.create(
-    {
-        name: 'Konoha', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToaMWi7MexcLRwS3uYfIw45irXwzu3nFvhWUJD8CAqa5SGispS'
-    }, function(err, campground){
-        if(err){
-            console.log(err);
-        } else {
-            console.log("New campground created...");
-            console.log(campground);
-        }
-    });
-
-var campgrounds = [
-    {name: 'Konoha', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToaMWi7MexcLRwS3uYfIw45irXwzu3nFvhWUJD8CAqa5SGispS'},
-    {name: 'Sand Village', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVDOatpkEstveXtwm_AgDnxNdse1EZ1ZzDd99jUngHkiolT5PY'},
-    {name: 'Village of the mist', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoDcmG0xyhrvTUGcL_guPegvpzhKPTTWW_bEa2JrGg2Q4ZSxlY'},
-    {name: 'Konoha', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToaMWi7MexcLRwS3uYfIw45irXwzu3nFvhWUJD8CAqa5SGispS'},
-    {name: 'Sand Village', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVDOatpkEstveXtwm_AgDnxNdse1EZ1ZzDd99jUngHkiolT5PY'},
-    {name: 'Village of the mist', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoDcmG0xyhrvTUGcL_guPegvpzhKPTTWW_bEa2JrGg2Q4ZSxlY'}
-]
-
-app.use(bodyParser.urlencoded({extended: true}));
-app.set('view engine', 'ejs');
-
 app.get('/', function(req, res){
     res.render('home');
 });
 
 app.get('/campgrounds', function(req, res){
-    res.render('campgrounds', {campgrounds: campgrounds});
+    Campground.find({}, function(err, allCampgrounds){
+        if(err){
+            console.log(err);
+        } else {
+            res.render('campgrounds',{campgrounds: allCampgrounds});
+        }
+    });
+});
+
+app.post('/campgrounds', function(req, res){
+    var name = req.body.name;
+    var image = req.body.image;
+    var newCampground = {name: name, image: image}
+    Campground.create(newCampground, function(err, newlyCreated){
+        if(err){
+            console.log(err);
+        } else {
+            res.redirect('/campgrounds');
+            console.log('Created a new campground: ' + newCampground);
+        }
+    });
 });
 
 app.get('/campgrounds/new', function(req, res){
